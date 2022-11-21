@@ -27,5 +27,5 @@ func main() {
 	url := viper.GetString("settings.server.url")
 	port := viper.GetString("settings.server.port")
 	// 打印参数
-	fmt.Println("配置中的服务器url、端口号为：", url+":"+port)
+	fmt.Printf("配置中的服务器地址及端口号为：%s:%s", url, port)
 }
