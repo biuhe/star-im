@@ -53,3 +53,114 @@ star-im
       └── test
 ```
 
+### viper 配置管理库
+
+#### 定义
+
+Viper是一个完整的Go应用程序配置解决方案，可以用于读取 JSON、TOML、YAML、HCL、env file和Java properties 配置文件。
+
+我们通常将一些配置信息，如数据库的访问路径，端口号等存放在配置文件中方便统一修改。
+
+在 Java 中通常为 `application.yml` 或者 `applicatiton.properties` 文件，然后在 springboot 框架下使
+用 `@ConfigurationProperties(prefix=”setting_name”) ` 或者 `@Value(“valueStr”)` 的形式来读取。
+
+Viper 就是 go 用于做这一部分的工作类库
+
+[GitHub](https://github.com/spf13/viper)
+
+#### 使用
+
+##### 下载
+
+在项目中打开命令行执行如下命令
+
+```shell
+go get github.com/spf13/viper
+```
+
+##### 使用
+
+在 `项目根目录/src/resource` 目录下新建一个 `app.yml` 文件，并写入以下配置项
+
+``` yaml
+settings:
+  server:
+    url: localhost
+    port: 8081
+```
+
+注：我们现在约定 `settings ` 为配置项根节点，之后新增例如 `settings:database`
+之类的节点，则是在settings下新增一个 `database `节点，而不是重复设置多一个 `settings`。 其他新增/修改项也遵循此说法。
+
+如在settings下新增 `database `内容， 并修改 `server`下的端口号为9999，示例如下
+
+错误示例为：
+
+``` yaml
+settings:
+  server:
+    url: localhost
+    port: 8081
+server:   
+	port: 9999
+settings:
+	database:
+		type: mysql
+```
+
+正确示例为：
+
+``` yaml
+settings:
+  server:
+    url: localhost
+    port: 9999
+	database:
+		type: mysql
+```
+
+在  `项目根目录/src/test` 目录下新建一个 `pkg` 目录，用于测试引入的第三方类库。在目录下新建 `test_viper.go` 测试文件
+
+``` go
+// main 方法必须使用 main 包
+package main
+
+// 引入依赖
+import (
+	"fmt"
+	"github.com/spf13/viper"
+)
+
+// 主要执行的方法
+func main() {
+  
+	// 配置文件名(不带扩展名，即 app.yml 只需要app这部分)
+	viper.SetConfigName("app")
+	// 如果配置文件名称中没有扩展名，则为必填项
+	viper.SetConfigType("yaml")
+	// 在其中查找配置文件的路径
+	viper.AddConfigPath("src/resource/")
+	// 查找并读取配置文件
+	err := viper.ReadInConfig()
+	if err != nil {
+		// 处理读取配置文件时出现的错误
+		panic(fmt.Errorf("读取配置异常，原因为: %w", err))
+	}
+  
+	// 打印内容到控制台
+	fmt.Println("初始化 app 配置成功")
+	// 获取配置文件中的参数
+	url := viper.GetString("settings.server.url")
+	port := viper.GetString("settings.server.port")
+	// 打印参数
+	fmt.Println("配置中的服务器url、端口号为：", url+":"+port)
+}
+
+```
+
+
+
+
+
+
+

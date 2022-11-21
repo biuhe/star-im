@@ -1,0 +1,4 @@
+settings:
+  server:
+    url: localhost
+    port: 8081
