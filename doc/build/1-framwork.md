@@ -1,10 +1,8 @@
 # 搭建步骤1-框架相关
 
-## 初始化
+## go modules 包管理工具
 
-### go modules 包管理工具
-
-#### 定义
+### 定义
 
 依赖管理工具，可以理解为 maven / gradle 等工具
 
@@ -12,7 +10,7 @@
 
 > 模块是相关Go包的集合。modules是源代码交换和版本控制的单元。go命令直接支持使用modules，包括记录和解析对其他模块的依赖性。modules替换旧的基于GOPATH的方法来指定在给定构建中使用哪些源文件。
 
-#### 初始化
+### 初始化
 
 在项目根目录（star-im/）中执行
 
@@ -41,6 +39,8 @@ why         explain why packages or modules are needed 	-- 解释为什么需要
 
 可以使用命令 `go list -m -u all `来检查可以升级的package
 
+依赖包仓库地址：https://pkg.go.dev/（相当于maven的 https://mvnrepository.com/），搜索需要的依赖包可以访问此链接，里面也包含了依赖包的使用事项等。
+
 目前 go web 似乎没有比较成型的 web 开发标准，因此我沿用了 Java 的习惯
 
 在根目录中新增 src 目录，以及 main、resource、test 三个下级目录，用于存放主要程序文件、资源及配置文件、测试文件。
@@ -53,9 +53,9 @@ star-im
       └── test
 ```
 
-### viper 配置管理库
+## viper 配置管理库
 
-#### 定义
+### 定义
 
 Viper是一个完整的Go应用程序配置解决方案，可以用于读取 JSON、TOML、YAML、HCL、env file和Java properties 配置文件。
 
@@ -66,11 +66,13 @@ Viper是一个完整的Go应用程序配置解决方案，可以用于读取 JSO
 
 Viper 就是 go 用于做这一部分的工作类库
 
+相关链接：
+
 [GitHub](https://github.com/spf13/viper)
 
-#### 使用
+[PKG](https://pkg.go.dev/github.com/spf13/viper)
 
-##### 下载
+### 安装
 
 在项目中打开命令行执行如下命令
 
@@ -78,7 +80,7 @@ Viper 就是 go 用于做这一部分的工作类库
 go get github.com/spf13/viper
 ```
 
-##### 使用
+### 使用
 
 在 `项目根目录/src/resource` 目录下新建一个 `app.yml` 文件，并写入以下配置项
 
@@ -119,6 +121,8 @@ settings:
 		type: mysql
 ```
 
+### 测试
+
 在  `项目根目录/src/test` 目录下新建一个 `pkg` 目录，用于测试引入的第三方类库。在目录下新建 `test_viper.go` 测试文件
 
 ``` go
@@ -153,10 +157,130 @@ func main() {
 	url := viper.GetString("settings.server.url")
 	port := viper.GetString("settings.server.port")
 	// 打印参数
-	fmt.Println("配置中的服务器url、端口号为：", url+":"+port)
+	fmt.Printf("配置中的服务器地址及端口号为：%s:%s", url, port)
 }
 
 ```
+
+执行程序后在控制台输出如下结果：
+
+```go
+初始化 app 配置成功
+配置中的服务器地址及端口号为：localhost:8081
+```
+
+## gorm 对象关系映射框架
+
+### 定义
+
+gorm是全功能的ORM框架，包含了对不同数据库的增删改查操作，并支持事务、批量操作等等。
+
+和`Java`的`hibernate`框架相似
+
+相关链接：
+
+[GitHub](https://github.com/go-gorm/gorm)
+
+[GORM中文网](https://gorm.io/zh_CN/docs/index.html)
+
+### 安装
+
+```shell
+go get gorm.io/gorm
+go get gorm.io/driver/mysql
+```
+
+### 测试
+
+创建数据库的步骤忽略，我们约定数据库名称为star-im，用户名和密码均为root。
+
+编写测试类
+
+在  `项目根目录/src/test/pkg` 目录下新建 `test_gorm.go` 测试文件
+
+``` go
+package main
+
+import (
+	"fmt"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+)
+
+// TestProduct 定义一个实体
+type TestProduct struct {
+	// gorm.Model 提供了基础实体的定义，包含了id, CreatedAt, UpdatedAt, DeletedAt 字段
+	gorm.Model
+	// Name 商品名称
+	Name string
+	// Price 商品价格
+	Price uint
+}
+
+// 测试 ORM 框架 —— 连接 MySQL https://github.com/go-gorm/gorm
+func main() {
+	// 连接信息，字符串中内容分别为：用户名:密码@连接方式(Host:Port)/数据库名?字符集&解析时间&默认时间
+	// 更多参数详见：https://github.com/go-sql-driver/mysql#parameters
+	dsn := "root:root@tcp(127.0.0.1:3306)/star-im?charset=utf8mb4&parseTime=True&loc=Local"
+	// 连接数据库，并设置基本的配置
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		// 如果连接有异常则打印
+		fmt.Println("连接数据库失败：", err)
+	}
+
+	// 迁移 schema，如果数据库该表没有则创建表
+	err = db.AutoMigrate(&TestProduct{})
+	if err != nil {
+		fmt.Println("创建数据库表异常：", err)
+	}
+
+	// Create 创建记录
+	// 定义实体
+	product := &TestProduct{Name: "奶茶", Price: 100}
+	// 创建记录
+	result := db.Create(product)
+	// 创建成功后会返回插入数据的主键给实体赋值 ID
+	fmt.Println("ID为：", product.ID)
+	fmt.Println("如果有异常，则会输出：", result.Error)
+	fmt.Println("返回插入记录的条数：", result.RowsAffected)
+
+	// Find 查询
+	prod := db.First(&product, "name = ?", "奶茶")
+	fmt.Println("查询数:", prod.RowsAffected)
+
+	// 查找后返回实体
+	prod2 := TestProduct{}
+	db.Where("name = ?", "奶茶").First(&prod2)
+	fmt.Println("实体：", prod2)
+
+	// Update - 修改
+	// 将 product 的 price 更新为 200
+	db.Model(&product).Update("Price", 200)
+	// Update - 更新多个字段
+	db.Model(&product).Updates(TestProduct{Price: 200, Name: "蛋糕"})
+	// 仅更新非零值字段
+	db.Model(&product).Updates(map[string]interface{}{"Price": 200, "Name": "蛋糕"})
+
+	// Delete - 逻辑删除 product，会修改 deleted_at，标记为删除
+	db.Delete(&product, 1)
+}
+
+```
+
+执行程序后在控制台输出如下结果：
+
+``` shell
+ID为： 1
+如果有异常，则会输出： <nil>
+返回插入记录的条数： 1
+查询数: 1
+实体： {{1 2022-11-22 16:53:58.969 +0800 CST 2022-11-22 16:53:58.969 +0800 CST {0001-01-01 00:00:00 +0000 UTC false}} 奶茶 100}
+```
+
+其他更多操作请参考 [GORM中文网](https://gorm.io/zh_CN/docs/index.html)
+，以及 [约束](https://gorm.io/zh_CN/docs/constraints.html)、[连接池](https://gorm.io/zh_CN/docs/generic_interface.html)
+、[日志](https://gorm.io/zh_CN/docs/logger.html) 等配置可根据自身需求学习设置。我在后续编码过程中也会讲解并设置。
 
 
 

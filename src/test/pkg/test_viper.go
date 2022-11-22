@@ -8,6 +8,7 @@ import (
 )
 
 // 主要执行的方法
+// 测试 viper 配置管理库 https://github.com/spf13/viper
 func main() {
 	// 配置文件名(不带扩展名，即 app.yml 只需要app这部分)
 	viper.SetConfigName("app")
