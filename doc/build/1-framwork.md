@@ -10,6 +10,8 @@
 
 > 模块是相关Go包的集合。modules是源代码交换和版本控制的单元。go命令直接支持使用modules，包括记录和解析对其他模块的依赖性。modules替换旧的基于GOPATH的方法来指定在给定构建中使用哪些源文件。
 
+
+
 ### 初始化
 
 在项目根目录（star-im/）中执行
@@ -18,7 +20,8 @@
 go mod init star-im
 ```
 
-会在根目录生成一个 go.mod 的文件来进行包依赖的管理
+会在根目录生成一个 go.mod 的文件来进行包依赖的管理，其中会包含我们所需要的依赖及版本内容，此外某些依赖后面会有 indirect
+字样，表示该依赖为传递依赖，也就是非直接依赖。
 
 其他命令如：
 
@@ -53,6 +56,8 @@ star-im
       └── test
 ```
 
+
+
 ## viper 配置管理库
 
 ### 定义
@@ -82,7 +87,7 @@ go get github.com/spf13/viper
 
 ### 使用
 
-在 `项目根目录/src/resource` 目录下新建一个 `app.yml` 文件，并写入以下配置项
+在 `项目根目录/src/resource` 资源目录下新建一个 `app.yml` 配置文件，并写入以下配置项
 
 ``` yaml
 settings:
@@ -194,8 +199,6 @@ go get gorm.io/driver/mysql
 
 创建数据库的步骤忽略，我们约定数据库名称为star-im，用户名和密码均为root。
 
-编写测试类
-
 在  `项目根目录/src/test/pkg` 目录下新建 `test_gorm.go` 测试文件
 
 ``` go
@@ -281,6 +284,72 @@ ID为： 1
 其他更多操作请参考 [GORM中文网](https://gorm.io/zh_CN/docs/index.html)
 ，以及 [约束](https://gorm.io/zh_CN/docs/constraints.html)、[连接池](https://gorm.io/zh_CN/docs/generic_interface.html)
 、[日志](https://gorm.io/zh_CN/docs/logger.html) 等配置可根据自身需求学习设置。我在后续编码过程中也会讲解并设置。
+
+## gin http 框架
+
+### 定义
+
+Gin是用 Go 开发的一个HTTP web 微框架，类似 Martinier
+的API，重点是小巧、易用、性能好很多，也因为 [httprouter](https://github.com/julienschmidt/httprouter) 的性能提高了40倍
+
+相关链接：
+
+[GitHub](https://github.com/gin-gonic/gin)
+
+### 安装
+
+``` shell
+go get github.com/gin-gonic/gin
+```
+
+### 测试
+
+在  `项目根目录/src/test/pkg` 目录下新建 `test_gin.go` 测试文件
+
+``` go
+package main
+
+import (
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+func main() {
+	// 默认返回一个已连接日志记录器和恢复中间件的引擎实例。
+	r := gin.Default()
+	// 绑定路由 /ping，访问后执行func的方法
+	r.GET("/ping", func(c *gin.Context) {
+		// 返回一个 json， 状态值为 200， H的内容为 map[string]
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	})
+
+	// 在0.0.0.0：8080上侦听和服务(对于Windows“为 localhost：8080”)
+	err := r.Run()
+	if err != nil {
+		fmt.Println("启动服务异常：", err)
+	}
+}
+
+```
+
+通过浏览器访问：http://localhost:8080/ping
+
+得到如下信息：
+
+```json
+{
+  "message": "pong"
+}
+```
+
+此时我们就已经完成了http框架的测试，官方 GitHub 文档有提供不同请求方式、参数绑定、文件上传等示例，可以参考学习。后续将会基于野火IM
+的[PC前端](https://github.com/wildfirechat/vue-pc-chat) 以及 [Java后端](https://github.com/wildfirechat/app-server)
+示例进行改造。
+
+
 
 
 
