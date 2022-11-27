@@ -2,3 +2,14 @@ settings:
   server:
     url: localhost
     port: 8081
+    readTimeout: 60
+    writeTimeout: 60
+
+  db:
+    type: mysql
+    user: root
+    password: root
+    host: 127.0.0.1:3306
+    name: star-im
+    prefix:
+
