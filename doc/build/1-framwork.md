@@ -674,7 +674,8 @@ func Setup() *gin.Engine {
 	f, _ := os.Create("gin.log")
 	gin.DefaultWriter = io.MultiWriter(f)
   
-  	// 统一日志
+  // 使用中间件
+  // 统一日志
 	r.Use(gin.Logger())
 
 	// 不需要鉴权
@@ -700,7 +701,7 @@ func Setup() *gin.Engine {
 
 我们规范约定返回值参数有利于我们对数据进行管理以及提升前后端开发的效率。
 
-在 在  `项目根目录/src/main/` 目录下新建一个` common/app ` 层级目录，并在 `app `目录下分别建立 `code.go`、`msg.go`
+在  `项目根目录/src/main/` 目录下新建一个` common/app ` 层级目录，并在 `app `目录下分别建立 `code.go`、`msg.go`
 、 `response.go` 用于存放 返回值、返回消息、统一返回值的实体对象
 
 `code.go` 主要定义返回值常量，代码如下：
@@ -800,6 +801,72 @@ func Ping(c *gin.Context) {
 ```
 
 ### 统一异常处理
+
+我们需要统一处理系统的异常信息并让异常结果也显示为统一的返回结果对象，那么需要进行统一异常处理。
+
+在  `项目根目录/src/main/` 目录下新建一个 `handler` 目录，并在目录下新建一个 `exception.go` 文件，用于处理异常信息
+
+`exception.go` 代码如下：
+
+``` go
+package handler
+
+import (
+	"github.com/gin-gonic/gin"
+	"log"
+	"net/http"
+	"runtime/debug"
+	"star-im/src/main/common/app"
+)
+
+// Recover 注意 Recover 要尽量放在router.User的第一个被加载
+// 如不是的话，在recover前的中间件或路由，将不能被拦截到
+// 程序的原理是：
+// 1.请求进来，执行recover
+// 2.程序异常，抛出panic
+// 3.panic被 recover捕获，返回异常信息，并Abort,终止这次请求
+func Recover(c *gin.Context) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			//打印错误堆栈信息
+			log.Printf("panic: %v\n", r)
+			debug.PrintStack()
+			//封装通用json返回
+			c.JSON(http.StatusOK, app.Response{
+				Code: app.ERROR,
+				Msg:  ErrorToString(r),
+				Data: nil,
+			})
+			//终止后续接口调用，不加的话recover到异常后，还会继续执行接口里后续代码
+			c.Abort()
+		}
+	}()
+
+	//加载完 defer recover，继续后续接口调用
+	c.Next()
+}
+
+// ErrorToString recover错误，转string
+func ErrorToString(r interface{}) string {
+	switch v := r.(type) {
+	case error:
+		return v.Error()
+	default:
+		return r.(string)
+	}
+}
+
+```
+
+该类主要捕获panic异常，并返回 json 信息给客户端
+
+在 `src/main/routers/router.go` 文件中添加如下代码即可。
+
+```go
+// 统一异常处理
+r.Use(handler.Recover)
+```
 
 参考：
 
