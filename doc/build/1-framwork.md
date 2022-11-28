@@ -868,6 +868,106 @@ func ErrorToString(r interface{}) string {
 r.Use(handler.Recover)
 ```
 
+### swag 接口文档
+
+我们引入 Swagger 来生成接口文档，方便统一管理接口及调试。
+
+相关链接：
+
+[GitHub](https://github.com/swaggo/swag/blob/master/README_zh-CN.md)
+
+#### 安装
+
+``` shell
+go install github.com/swaggo/swag/cmd/swag@latest
+```
+
+#### 使用
+
+``` shell
+swag init -o "src/main/docs"
+```
+
+- -o 为 output，指定输出目录，默认为“./docs”
+
+其他更多文章参考 [GitHub中文文档](https://github.com/swaggo/swag/blob/v1.8.8/README_zh-CN.md)
+
+在主程序入口 `main.go` 中可以添加如下注释：
+
+``` go
+// @title           Star-IM
+// @version         1.0
+// @description     即时通讯接口文档
+func main() {
+  ……
+}
+```
+
+在 `src/main/routers/api/health.go` 文件中添加如下注释
+
+``` go
+
+// Ping
+// @Summary      健康检查
+// @Description  接口连通性测试
+// @Tags         测试
+// @Success      200  {object}  app.Response
+// @Router       /ping [get]
+func Ping(c *gin.Context) {
+  ……
+}
+```
+
+在 `src/main/routers/router.go` 加入swagger接口文档的访问，并引入指定了目录的swagger文件
+
+代码如下：
+
+```go
+package routers
+
+import (
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"io"
+	"os"
+	_ "star-im/src/main/docs"
+	"star-im/src/main/handler"
+	"star-im/src/main/routers/api"
+)
+
+// Setup 初始化路由
+func Setup() *gin.Engine {
+	r := gin.Default()
+	// 记录到文件
+	f, _ := os.Create("gin.log")
+	gin.DefaultWriter = io.MultiWriter(f)
+
+	// 使用中间件
+	// 统一异常处理
+	r.Use(handler.Recover)
+	// 统一日志
+	r.Use(gin.Logger())
+
+	// 不需要鉴权
+	r.GET("/ping", api.Ping)
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	return r
+}
+```
+
+主要变更内容为
+
+- `import  _ "star-im/src/main/docs"`
+- `import swaggerFiles "github.com/swaggo/files"`
+- `import ginSwagger "github.com/swaggo/gin-swagger"`
+- `r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))`
+
+#### 测试
+
+通过浏览器访问 http://localhost:8081/swagger/index.html#/ 可以进入到swagger 接口文档的管理界面
+
 参考：
 
 [跟煎鱼学go](https://eddycjy.gitbook.io/golang/di-3-ke-gin/install)

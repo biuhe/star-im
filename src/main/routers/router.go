@@ -2,8 +2,11 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"io"
 	"os"
+	_ "star-im/src/main/docs"
 	"star-im/src/main/handler"
 	"star-im/src/main/routers/api"
 )
@@ -24,13 +27,6 @@ func Setup() *gin.Engine {
 	// 不需要鉴权
 	r.GET("/ping", api.Ping)
 
-	// swagger info
-	//docs.SwaggerInfo.Title = "Star-Im"
-	//docs.SwaggerInfo.Description = "即时通讯接口文档"
-	//docs.SwaggerInfo.Version = "1.0"
-	////docs.SwaggerInfo.Host = "petstore.swagger.io"
-	////docs.SwaggerInfo.BasePath = "/v2"
-	//docs.SwaggerInfo.Schemes = []string{"http", "https"}
-	//r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return r
 }

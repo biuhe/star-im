@@ -15,6 +15,22 @@ func init() {
 	config.Initial()
 }
 
+// @title           Star-IM
+// @version         1.0
+// @description     即时通讯接口文档
+// #termsOfService  http://swagger.io/terms/
+
+// @contact.name   Biu He
+// @contact.url    http://www.swagger.io/support
+// @contact.email  wsxc_0617@sina.cn
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8081
+// BasePath  /
+// @schemes http https
+// #securityDefinitions.basic  BasicAuth
 func main() {
 	// 路由
 	routersInit := routers.Setup()

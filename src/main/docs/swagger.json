@@ -1,0 +1,59 @@
+{
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "即时通讯接口文档",
+    "title": "Star-IM",
+    "contact": {
+      "name": "Biu He",
+      "url": "http://www.swagger.io/support",
+      "email": "wsxc_0617@sina.cn"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "1.0"
+  },
+  "host": "localhost:8081",
+  "paths": {
+    "/ping": {
+      "get": {
+        "description": "接口连通性测试",
+        "tags": [
+          "测试"
+        ],
+        "summary": "健康检查",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "app.Response": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "响应编码",
+          "type": "integer"
+        },
+        "data": {
+          "description": "返回数据"
+        },
+        "msg": {
+          "description": "返回消息",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

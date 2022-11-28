@@ -1,0 +1,40 @@
+definitions:
+  app.Response:
+    properties:
+      code:
+        description: 响应编码
+        type: integer
+      data:
+        description: 返回数据
+      msg:
+        description: 返回消息
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact:
+    email: wsxc_0617@sina.cn
+    name: Biu He
+    url: http://www.swagger.io/support
+  description: 即时通讯接口文档
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Star-IM
+  version: "1.0"
+paths:
+  /ping:
+    get:
+      description: 接口连通性测试
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.Response'
+      summary: 健康检查
+      tags:
+        - 测试
+schemes:
+  - http
+  - https
+swagger: "2.0"
